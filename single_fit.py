@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pickle
+import json
 from bresenham import bresenham
 import torch
 import torch.nn as nn
@@ -225,6 +226,28 @@ def sketch_point_Inp(sketch,name, dir_name, invert_yaxis=True):
     plt.cla()
     plt.clf()
 
+def convert_embroidery_to_quickdraw(json_file):
+    # Load the embroidery JSON data
+    with open(json_file, "r") as f:
+        data = json.load(f)
+
+    quickdraw_data = []
+
+    for stroke in data["stitches"]:  # Assuming strokes are stored under "strokes"
+        x_coords = stroke[0]  # List of x-coordinates
+        y_coords = stroke[1]  # List of y-coordinates
+        pen = 0
+        if stroke[2] == "STITCH":
+          pen = 0
+        elif stroke[2] == "COLOR_CHANGE" or stroke[2] == "END":
+
+          pen = 1
+        else:
+          print(stroke[2])
+          continue
+
+        quickdraw_data.append([x_coords, y_coords, pen])
+    return quickdraw_data
 
 if __name__ == "__main__":
 
@@ -237,7 +260,7 @@ if __name__ == "__main__":
     lamda = args.lamda
     latent_size = args.latent_size
     
-    root = "/vol/research/hmriCV2/Datasets/"
+    root = "./data/1.json"
     data_all = []
 
     if args.dset == "quickdraw":
@@ -256,8 +279,12 @@ if __name__ == "__main__":
                 
         data_all.append(torch.from_numpy(preprocess_data(data_['sketch_points'])))
 
-
-
+    if args.dset == "emb":
+        quickdraw_formatted = convert_embroidery_to_quickdraw(root)
+        quickdraw_tensor = torch.tensor(quickdraw_formatted, dtype=torch.int)
+        # Print or save
+        data_all.append(quickdraw_tensor)
+        
     elif args.dset == "fscoco":
             root_fs = os.path.join(root, "fscoco","vector_sketches")
             subdir = os.listdir(root_fs)
