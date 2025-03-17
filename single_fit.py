@@ -261,6 +261,7 @@ if __name__ == "__main__":
     latent_size = args.latent_size
     
     root = "./data/1.json"
+    args.dset = "emb"
     data_all = []
 
     if args.dset == "quickdraw":
